@@ -88,6 +88,8 @@ discreteoxygen <- discrete %>%
 discreteoxygen$`CTD Depth [m]` <- discreteoxygen$`CTD Depth [m]` * -1
 # check the following conversion with OOI ion function and/or data specification sheet
 discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxygen [mL/L]` * 44.66)
+discreteoxygen <- mutate(discreteoxygen, CTD_oxygen_umol_L = `CTD Oxygen [mL/L]` * 44.66)
+
 
 ```
 
@@ -96,6 +98,11 @@ discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxyg
 ```{r}
 
 ggplot(discreteoxygen, aes(discrete_oxygen_umol_L,`CTD Depth [m]`, color = date)) +
+  geom_point() +
+  xlim(50, 175) +
+  ylim(-4300, -2000)
+
+ggplot(discreteoxygen, aes(CTD_oxygen_umol_L,`CTD Depth [m]`, color = date)) +
   geom_point() +
   xlim(50, 175) +
   ylim(-4300, -2000)
