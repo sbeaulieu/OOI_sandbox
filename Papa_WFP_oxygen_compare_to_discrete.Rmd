@@ -97,12 +97,12 @@ discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxyg
 
 ggplot(discreteoxygen, aes(discrete_oxygen_umol_L,`CTD Depth [m]`, color = date)) +
   geom_point() +
-  xlim(50, 150) +
+  xlim(50, 175) +
   ylim(-4300, -2000)
 
 ggplot(df, aes(profiler_oxygen_umol_L,`z (m)`, color = date)) +
   geom_point() +
-  xlim(50, 150) +
+  xlim(50, 175) +
   ylim(-4300, -2000)
 
 # consider options of how to plot all on one plot
@@ -127,29 +127,29 @@ discrete_to_plot <- discrete_to_plot %>%
 
 ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
    geom_point() +
-   xlim(50, 150) +
+   xlim(50, 175) +
    ylim(-4300, -2000)
 
 ggplot(profiler_to_plot, aes(oxygen_umol_L, depth, color = date)) +
    geom_point() +
-   xlim(50, 150) +
+   xlim(50, 175) +
    ylim(-4300, -2000)
 
 # the following does not work yet to superimpose plots
 # ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
 #    geom_point() +
 #    geom_point(data = profiler_to_plot, color = date)
-#    xlim(50, 150) +
+#    xlim(50, 175) +
 #    ylim(-4300, -2000)
 
 # the following does not work yet to superimpose plots
 # p <- ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
 #   geom_point() +
-#   xlim(50, 150) +
+#   xlim(50, 175) +
 #   ylim(-4300, -2000)
 # 
 # p <- p + geom_point(data = profiler_to_plot) +
-#   xlim(50, 150) +
+#   xlim(50, 175) +
 #   ylim(-4300, -2000)
 # 
 # print(p)
