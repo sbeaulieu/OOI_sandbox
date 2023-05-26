@@ -1,0 +1,159 @@
+---
+title: "Papa_WFP_oxygen_compare_to_discrete"
+author: "Stace Beaulieu"
+date: "2023-05-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(lubridate)
+library(httr)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+## Access Papa lower WFP data for oxygen during the transition between deployments 3 and 4
+
+```{r}
+
+# view in Data Explorer
+# https://dataexplorer.oceanobservatories.org/#metadata/104156/station/35/sensor/data?start=2016-06-22T00:00:00Z&end=2016-07-10T00:00:00Z&leg_clim_max=false&leg_clim_min=false
+
+# generate URL for csvp in ERDDAP for date range just including discrete data at HYPM
+df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093") 
+
+# rename the column to compare against discrete
+df <- rename(df, profiler_oxygen_umol_L = `mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)`)
+# note the first few values on 2016-06-29 are zero; check if this is a fill value
+
+# just need date for the plotting, better would be to create additional new column date
+df$`time (UTC)` <- as_date(df$`time (UTC)`)
+df <- rename(df, date = `time (UTC)`)
+
+```
+
+
+## Access OOI discrete data from Alfresco
+
+```{r}
+
+url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/adf882e4-16cb-4d89-b89f-c96fcbc05e93/Station_Papa-04_RB1605_Discrete_Summary.xlsx')
+
+```
+
+```{r}
+# past experience if this chunk and the one above are not run separately, get Error
+httr::GET(url, authenticate("guest", "guest"), write_disk(tf <- tempfile(fileext = ".xlsx")))
+tf
+discrete <- read_excel(tf, 1L) 
+
+# need to remove -9999999 from `CTD Bottle Closure Time [UTC]` for the following workflow
+discrete <- filter(discrete, `CTD Bottle Closure Time [UTC]` != -9999999)
+
+
+# note that the following use of as.POSIXct() removes the time part but that all I need to retain is date
+discrete$`CTD Bottle Closure Time [UTC]` <- as.POSIXct(discrete$`CTD Bottle Closure Time [UTC]`, tz="UTC")
+discrete <- rename(discrete, date = `CTD Bottle Closure Time [UTC]`)
+discrete$date <- as_date(discrete$date)
+
+```
+
+## Subset OOI discrete oxygen
+
+```{r}
+discreteoxygen <- discrete %>%
+  select(date, "CTD Depth [m]", "CTD Oxygen [mL/L]", "Discrete Oxygen [mL/L]") %>%
+  mutate(across("CTD Depth [m]":"Discrete Oxygen [mL/L]",as.numeric))
+
+# for some reason I cannot filter
+  # filter("CTD Depth [m]" > 2000) %>%
+  # filter("Discrete Oxygen [mL/L]" > 0)
+         
+```
+
+## Convert discrete oxygen for comparison to Data Explorer WFP oxygen
+
+```{r}
+discreteoxygen$`CTD Depth [m]` <- discreteoxygen$`CTD Depth [m]` * -1
+# check the following conversion with OOI ion function and/or data specification sheet
+discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxygen [mL/L]` * 44.66)
+
+```
+
+## Test plots
+
+```{r}
+
+ggplot(discreteoxygen, aes(discrete_oxygen_umol_L,`CTD Depth [m]`, color = date)) +
+  geom_point() +
+  xlim(50, 150) +
+  ylim(-4300, -2000)
+
+ggplot(df, aes(profiler_oxygen_umol_L,`z (m)`, color = date)) +
+  geom_point() +
+  xlim(50, 150) +
+  ylim(-4300, -2000)
+
+# consider options of how to plot all on one plot
+# https://stackoverflow.com/questions/21192002/how-to-combine-2-plots-ggplot-into-one-plot
+
+```
+
+## Equate variables and overlay plots
+
+```{r}
+# rename profiler columns
+profiler_to_plot <- df # initialize new data frame
+profiler_to_plot <- profiler_to_plot %>%
+  rename(depth = 'z (m)') %>%
+  rename(oxygen_umol_L = profiler_oxygen_umol_L)
+
+#rename discrete columns
+discrete_to_plot <- discreteoxygen # initialize new data frame
+discrete_to_plot <- discrete_to_plot %>%
+  rename(depth = "CTD Depth [m]") %>%
+  rename(oxygen_umol_L = discrete_oxygen_umol_L)
+
+ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+   geom_point() +
+   xlim(50, 150) +
+   ylim(-4300, -2000)
+
+ggplot(profiler_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+   geom_point() +
+   xlim(50, 150) +
+   ylim(-4300, -2000)
+
+# the following does not work yet to superimpose plots
+# ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+#    geom_point() +
+#    geom_point(data = profiler_to_plot, color = date)
+#    xlim(50, 150) +
+#    ylim(-4300, -2000)
+
+# the following does not work yet to superimpose plots
+# p <- ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+#   geom_point() +
+#   xlim(50, 150) +
+#   ylim(-4300, -2000)
+# 
+# p <- p + geom_point(data = profiler_to_plot) +
+#   xlim(50, 150) +
+#   ylim(-4300, -2000)
+# 
+# print(p)
+
+```
+
+
