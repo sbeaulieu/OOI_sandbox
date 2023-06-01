@@ -41,6 +41,15 @@ This R script plots discrete data from Alfresco against profiler data from Data 
 # this includes level 2 oxygen data in umol/kg
 # note the Global Wire Following Profiler Salinity Drift Correction may be applicable to the Level 2 oxygen data (see OOI Discourse)
 
+# this is for start deployment 1 26-28 July 2013
+# ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2013-07-26T00%3A00%3A00Z&time%3C=2013-07-29T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+
+# this is for between deployments 1 and 2 13-23 June 2014 
+# ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2014-06-13T00%3A00%3A00Z&time%3C=2014-06-23T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+
+# this is for between deployments 2 and 3 (i.e., for start 3) 5-6 June 2015
+# ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2015-06-04T00%3A00%3A00Z&time%3C=2015-06-07T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+
 # this is for between deployments 3 and 4
 # ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z"
 
@@ -63,6 +72,16 @@ df <- rename(df, date = `time (UTC)`)
 ## Access OOI discrete data from Alfresco
 
 ```{r}
+
+# this is for start deployment 1
+# note the discrete sheet has no values in CTD Depth [m] thus these data need special treatment in order to plot as below
+# url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/aa1ad07d-ff3b-4aa1-bde2-e54f8504b333/Station_Papa-01_MV1309_Discrete_Summary.xlsx')
+
+# this is for between deployments 1 and 2
+# url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/abc5c5b0-51f8-4758-afeb-0d11746f4b2c/Station_Papa-02_MV1404_Discrete_Summary.xlsx')
+
+# this is for between deployments 2 and 3 (i.e., for start 3)
+# url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/5c61d4bf-73e0-4a79-8d47-2a1ecafe4769/Station_Papa-03_TN323_Discrete_Summary.xlsx')
 
 # this is for between deployments 3 and 4
 # url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/adf882e4-16cb-4d89-b89f-c96fcbc05e93/Station_Papa-04_RB1605_Discrete_Summary.xlsx')
