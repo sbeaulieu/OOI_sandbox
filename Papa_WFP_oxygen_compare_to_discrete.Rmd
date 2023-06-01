@@ -1,7 +1,7 @@
 ---
 title: "Papa_WFP_oxygen_compare_to_discrete"
 author: "Stace Beaulieu"
-date: "2023-05-26"
+date: "2023-06-01"
 output: html_document
 ---
 
@@ -17,11 +17,10 @@ library(ggplot2)
 
 ```
 
-## R Markdown
+## Compare profiler data with discrete data during turn around cruise
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This R script plots discrete data from Alfresco against profiler data from Data Explorer ERDDAP during a turn-around cruise 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
 
 ## Access Papa lower WFP data for oxygen during the transition between deployments 3 and 4
 
@@ -31,10 +30,15 @@ When you click the **Knit** button a document will be generated that includes bo
 # https://dataexplorer.oceanobservatories.org/#metadata/104156/station/35/sensor/data?start=2016-06-22T00:00:00Z&end=2016-07-10T00:00:00Z&leg_clim_max=false&leg_clim_min=false
 
 # generate URL for csvp in ERDDAP for date range just including discrete data at HYPM
-df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093") 
+# this is just the level 1 oxygen data in umol/L
+# df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093") 
 
-# rename the column to compare against discrete
-df <- rename(df, profiler_oxygen_umol_L = `mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)`)
+# this includes level 2 oxygen data in umol/kg
+# note the Global Wire Following Profiler Salinity Drift Correction may be applicable to the Level 2 oxygen data (see OOI Discourse)
+df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z")
+
+# rename the columns to compare against discrete
+df <- rename(df, profiler_oxygen_umol_L = `mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)`, profiler_oxygen_umol_kg = `moles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled (micromol.kg-1)`)
 # note the first few values on 2016-06-29 are zero; check if this is a fill value
 
 # just need date for the plotting, better would be to create additional new column date
@@ -86,14 +90,67 @@ discreteoxygen <- discrete %>%
 
 ```{r}
 discreteoxygen$`CTD Depth [m]` <- discreteoxygen$`CTD Depth [m]` * -1
-# check the following conversion with OOI ion function and/or data specification sheet
+# the following conversion is rounded from ICES (44.661)  and Bio-Argo (44.6596)
 discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxygen [mL/L]` * 44.66)
 discreteoxygen <- mutate(discreteoxygen, CTD_oxygen_umol_L = `CTD Oxygen [mL/L]` * 44.66)
+# to convert to umol_kg the OOI BGC best practice is:
+# Winkler (umol/kg) = Winkler (ml/l)*44.661*1000/water density
+# the following uses constant seawater potential density of 1025 kg/m3
+# (43.5717) compares to NOAA WOD (43.570)
+discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_kg = `Discrete Oxygen [mL/L]` * 44.661*1000/1025)
+discreteoxygen <- mutate(discreteoxygen, CTD_oxygen_umol_kg = `CTD Oxygen [mL/L]` * 44.661*1000/1025)
 
+# quick summary to check ranges
+summary(discreteoxygen)
 
 ```
 
-## Test plots
+## Equate variables and overlay plots
+
+```{r}
+# rename profiler columns
+profiler_to_plot <- df # initialize new data frame
+profiler_to_plot <- profiler_to_plot %>%
+  rename(depth = 'z (m)') %>%
+  rename(oxygen_umol_L = profiler_oxygen_umol_L) %>%
+  rename(oxygen_umol_kg = profiler_oxygen_umol_kg)
+
+#rename discrete columns
+discrete_to_plot <- discreteoxygen # initialize new data frame
+discrete_to_plot <- discrete_to_plot %>%
+  rename(depth = "CTD Depth [m]") %>%
+  rename(oxygen_umol_L = discrete_oxygen_umol_L) %>%
+  rename(oxygen_umol_kg = discrete_oxygen_umol_kg)
+
+# ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+#    geom_point() +
+#    xlim(50, 175) +
+#    ylim(-4300, -2000)
+# 
+# ggplot(profiler_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+#    geom_point() +
+#    xlim(50, 175) +
+#    ylim(-4300, -2000)
+
+# superimpose plots Level 1 oxygen umol_L
+ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
+   geom_point() +
+   geom_point(data = profiler_to_plot) +
+   xlim(30, 160) +
+   ylim(-4300, -2000)
+
+# superimpose plots Level 2 oxygen umol_kg
+# note I have not yet applied the Global Wire Following Profiler Salinity Drift Correction (see OOI Discourse)
+# use same axes limits as 2018 SME ipynb
+ggplot(discrete_to_plot, aes(oxygen_umol_kg, depth, color = date)) +
+   geom_point() +
+   geom_point(data = profiler_to_plot) +
+   xlim(40, 140) +
+   ylim(-4250, -2000)
+
+```
+
+## Test plots using Level 1 oxygen umol_L
 
 ```{r}
 
@@ -116,51 +173,4 @@ ggplot(df, aes(profiler_oxygen_umol_L,`z (m)`, color = date)) +
 # https://stackoverflow.com/questions/21192002/how-to-combine-2-plots-ggplot-into-one-plot
 
 ```
-
-## Equate variables and overlay plots
-
-```{r}
-# rename profiler columns
-profiler_to_plot <- df # initialize new data frame
-profiler_to_plot <- profiler_to_plot %>%
-  rename(depth = 'z (m)') %>%
-  rename(oxygen_umol_L = profiler_oxygen_umol_L)
-
-#rename discrete columns
-discrete_to_plot <- discreteoxygen # initialize new data frame
-discrete_to_plot <- discrete_to_plot %>%
-  rename(depth = "CTD Depth [m]") %>%
-  rename(oxygen_umol_L = discrete_oxygen_umol_L)
-
-ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
-   geom_point() +
-   xlim(50, 175) +
-   ylim(-4300, -2000)
-
-ggplot(profiler_to_plot, aes(oxygen_umol_L, depth, color = date)) +
-   geom_point() +
-   xlim(50, 175) +
-   ylim(-4300, -2000)
-
-# superimpose plots
-ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
-   geom_point() +
-   geom_point(data = profiler_to_plot) +
-   xlim(50, 175) +
-   ylim(-4300, -2000)
-
-# the following does not work yet to superimpose plots
-# p <- ggplot(discrete_to_plot, aes(oxygen_umol_L, depth, color = date)) +
-#   geom_point() +
-#   xlim(50, 175) +
-#   ylim(-4300, -2000)
-# 
-# p <- p + geom_point(data = profiler_to_plot) +
-#   xlim(50, 175) +
-#   ylim(-4300, -2000)
-# 
-# print(p)
-
-```
-
 
