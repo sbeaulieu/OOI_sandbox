@@ -54,7 +54,10 @@ This R script plots discrete data from Alfresco against profiler data from Data 
 # ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z"
 
 # this is for between deployments 4 and 5 
-ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2017-07-14T00%3A00%3A00Z&time%3C=2017-07-18T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+# ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2017-07-14T00%3A00%3A00Z&time%3C=2017-07-18T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+
+# this is for between deployments 6 and 7 25-27 Sep 2019 
+ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2019-09-24T00%3A00%3A00Z&time%3C=2019-09-29T00%3A00%3A00Z"
 
 df <- read_csv(ERDDAPurl)
 
@@ -87,7 +90,10 @@ df <- rename(df, date = `time (UTC)`)
 # url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/adf882e4-16cb-4d89-b89f-c96fcbc05e93/Station_Papa-04_RB1605_Discrete_Summary.xlsx')
 
 # this is for between deployments 4 and 5
-url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/e62d564f-c629-4f32-af03-6508b616452c/Station_Papa-05_SR1710_Discrete_Summary.xlsx')
+# url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/e62d564f-c629-4f32-af03-6508b616452c/Station_Papa-05_SR1710_Discrete_Summary.xlsx')
+
+# this is for between deployments 6 and 7
+url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/31a9d169-abfe-4206-8e2c-781884ce1fa8/Station_Papa-07_SKQ201920S_Discrete_Summary.xlsx')
 
 ```
 
@@ -130,10 +136,12 @@ discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_L = `Discrete Oxyg
 discreteoxygen <- mutate(discreteoxygen, CTD_oxygen_umol_L = `CTD Oxygen [mL/L]` * 44.66)
 # to convert to umol_kg the OOI BGC best practice is:
 # Winkler (umol/kg) = Winkler (ml/l)*44.661*1000/water density
-# the following uses constant seawater potential density of 1025 kg/m3
-# (43.5717) compares to NOAA WOD (43.570)
+# the following uses constant seawater density of 1025 kg/m3
+# (conversion factor 43.5717 compares to NOAA WOD 43.570)
 discreteoxygen <- mutate(discreteoxygen, discrete_oxygen_umol_kg = `Discrete Oxygen [mL/L]` * 44.661*1000/1025)
 discreteoxygen <- mutate(discreteoxygen, CTD_oxygen_umol_kg = `CTD Oxygen [mL/L]` * 44.661*1000/1025)
+# need to find an equation to calcuate density based on CTD bottle data temperature, salinity, pressure for bottles plotted here for discrete Winkler oxygen
+# consider adjusting to seawater density of 1027.7 kg/m3 which is an approximate average density using an online calculator
 
 # quick summary to check ranges
 summary(discreteoxygen)
