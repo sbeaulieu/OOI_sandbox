@@ -22,20 +22,32 @@ library(ggplot2)
 This R script plots discrete data from Alfresco against profiler data from Data Explorer ERDDAP during a turn-around cruise 
 
 
-## Access Papa lower WFP data for oxygen during the transition between deployments 3 and 4
+## Access Papa lower WFP data for oxygen during the transition between deployments
 
 ```{r}
+# view in Data Explorer then select 2 days before and 2 days after in DE ERDDAP csvp 
 
 # view in Data Explorer
+# this is for between deployments 3 and 4
 # https://dataexplorer.oceanobservatories.org/#metadata/104156/station/35/sensor/data?start=2016-06-22T00:00:00Z&end=2016-07-10T00:00:00Z&leg_clim_max=false&leg_clim_min=false
+# this is for between deployments 4 and 5
+# https://dataexplorer.oceanobservatories.org/#metadata/104156/station/35/sensor/data?start=2017-07-09T07:07:42Z&end=2017-07-27T02:59:49Z&leg_clim_max=false&leg_clim_min=false
 
 # generate URL for csvp in ERDDAP for date range just including discrete data at HYPM
+# this is for between deployments 3 and 4
 # this is just the level 1 oxygen data in umol/L
 # df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093") 
 
 # this includes level 2 oxygen data in umol/kg
 # note the Global Wire Following Profiler Salinity Drift Correction may be applicable to the Level 2 oxygen data (see OOI Discourse)
-df <- read_csv("http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z")
+
+# this is for between deployments 3 and 4
+# ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2016-06-29T00%3A00%3A00Z&time%3C=2016-07-05T00%3A00%3A00Z"
+
+# this is for between deployments 4 and 5 
+ERDDAPurl <- "http://erddap.dataexplorer.oceanobservatories.org/erddap/tabledap/ooi-gp02hypm-wfp03-03-dostal000.csvp?time%2Cz%2Cmole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled%2Cmoles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled%2Csea_water_practical_salinity_profiler_depth_enabled%2Csea_water_pressure_profiler_depth_enabled%2Csea_water_temperature_profiler_depth_enabled&time%3E=2017-07-14T00%3A00%3A00Z&time%3C=2017-07-18T00%3A00%3A00Z&z%3E=-4067&z%3C=-2093"
+
+df <- read_csv(ERDDAPurl)
 
 # rename the columns to compare against discrete
 df <- rename(df, profiler_oxygen_umol_L = `mole_concentration_of_dissolved_molecular_oxygen_in_sea_water_profiler_depth_enabled (micromol.L-1)`, profiler_oxygen_umol_kg = `moles_of_oxygen_per_unit_mass_in_sea_water_profiler_depth_enabled (micromol.kg-1)`)
@@ -52,7 +64,11 @@ df <- rename(df, date = `time (UTC)`)
 
 ```{r}
 
-url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/adf882e4-16cb-4d89-b89f-c96fcbc05e93/Station_Papa-04_RB1605_Discrete_Summary.xlsx')
+# this is for between deployments 3 and 4
+# url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/adf882e4-16cb-4d89-b89f-c96fcbc05e93/Station_Papa-04_RB1605_Discrete_Summary.xlsx')
+
+# this is for between deployments 4 and 5
+url <- ('https://alfresco.oceanobservatories.org/alfresco/d/d/workspace/SpacesStore/e62d564f-c629-4f32-af03-6508b616452c/Station_Papa-05_SR1710_Discrete_Summary.xlsx')
 
 ```
 
